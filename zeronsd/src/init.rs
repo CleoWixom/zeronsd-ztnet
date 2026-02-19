@@ -32,6 +32,7 @@ pub struct Launcher {
     pub wildcard: bool,
     pub log_level: Option<crate::log::LevelFilter>,
     pub local_url: Option<String>,
+    pub central_instance: Option<String>,
     #[serde(skip_deserializing)]
     pub network_id: Option<String>,
 }
@@ -72,6 +73,7 @@ impl Default for Launcher {
             network_id: None,
             log_level: None,
             local_url: Some(ZEROTIER_LOCAL_URL.to_string()),
+            central_instance: None,
         }
     }
 }
@@ -110,6 +112,9 @@ impl Launcher {
 
         let domain_name = domain_or_default(self.domain.as_deref())?;
         let authtoken = authtoken_path(self.secret.as_deref());
+        if let Some(central_instance) = &self.central_instance {
+            std::env::set_var("ZEROTIER_CENTRAL_INSTANCE", central_instance);
+        }
         let client = central_client(central_token(self.token.as_deref())?)?;
 
         info!("Welcome to ZeroNS!");

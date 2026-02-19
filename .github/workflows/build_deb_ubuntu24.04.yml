@@ -32,19 +32,32 @@ jobs:
           REF_NAME="${GITHUB_REF_NAME:-dev}"
           cargo deb -p zeronsd --features vendored-openssl \
             --output "./target/debian/zeronsd_${REF_NAME}_amd64.deb"
+      
+      - name: Collect Debian package artifact
+        shell: bash
+        run: |
+          mkdir -p dist
+          mapfile -t debs < <(find . -type f -path '*/target/debian/*.deb' | sort)
+          if [ "${#debs[@]}" -eq 0 ]; then
+            echo "No .deb files were produced under any target/debian directory" >&2
+            exit 1
+          fi
+          echo "Found packages:"
+          printf ' - %s\n' "${debs[@]}"
+          cp "${debs[@]}" dist/
 
       - name: Upload workflow artifact
         uses: actions/upload-artifact@v4
         with:
           name: zeronsd-deb-ubuntu-24.04
-          path: ./target/debian/*.deb
-          overwrite: true 
-          
+          path: ./dist/*.deb
 
       - name: Upload .deb to GitHub Release (release event only)
         if: github.event_name == 'release'
-        uses: softprops/action-gh-release@v2
+        uses: ncipollo/release-action@v1
         with:
-          tag_name: ${{ github.event.release.tag_name }}
-          files: ./target/debian/*.deb
-          overwrite_files: true
+          tag: ${{ github.event.release.tag_name }}
+          artifacts: ./dist/*.deb
+          allowUpdates: true
+          replacesArtifacts: true
+          removeArtifacts: true

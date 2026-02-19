@@ -32,6 +32,7 @@ pub struct Launcher {
     pub wildcard: bool,
     pub log_level: Option<crate::log::LevelFilter>,
     pub local_url: Option<String>,
+    pub central_instance: Option<String>,
     #[serde(skip_deserializing)]
     pub network_id: Option<String>,
 }
@@ -72,6 +73,7 @@ impl Default for Launcher {
             network_id: None,
             log_level: None,
             local_url: Some(ZEROTIER_LOCAL_URL.to_string()),
+            central_instance: None,
         }
     }
 }
@@ -85,7 +87,10 @@ impl Launcher {
     pub fn parse_format(s: &str, format: ConfigFormat) -> Result<Self, anyhow::Error> {
         Ok(match format {
             ConfigFormat::JSON => serde_json::from_str(s)?,
-            ConfigFormat::YAML => serde_yml::from_str(s)?,
+            ConfigFormat::YAML => {
+                let normalized = normalize_yaml_config(s);
+                serde_yml::from_str(&normalized)?
+            }
             ConfigFormat::TOML => toml::from_str(s)?,
         })
     }
@@ -110,6 +115,9 @@ impl Launcher {
 
         let domain_name = domain_or_default(self.domain.as_deref())?;
         let authtoken = authtoken_path(self.secret.as_deref());
+        if let Some(central_instance) = &self.central_instance {
+            std::env::set_var("ZEROTIER_CENTRAL_INSTANCE", central_instance);
+        }
         let client = central_client(central_token(self.token.as_deref())?)?;
 
         info!("Welcome to ZeroNS!");
@@ -244,4 +252,36 @@ impl Launcher {
             "No listening IPs for your interface; assign one in ZeroTier Central."
         ));
     }
+}
+
+fn normalize_yaml_config(source: &str) -> String {
+    const ROOT_KEYS: [&str; 11] = [
+        "token",
+        "central_instance",
+        "domain",
+        "log_level",
+        "hosts",
+        "secret",
+        "wildcard",
+        "tls_cert",
+        "tls_key",
+        "chain_cert",
+        "local_url",
+    ];
+
+    source
+        .lines()
+        .map(|line| {
+            let trimmed = line.trim_start();
+            if ROOT_KEYS
+                .iter()
+                .any(|key| trimmed.starts_with(&format!("{key}:")))
+            {
+                trimmed.to_string()
+            } else {
+                line.to_string()
+            }
+        })
+        .collect::<Vec<_>>()
+        .join("\n")
 }

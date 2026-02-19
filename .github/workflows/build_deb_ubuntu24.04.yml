@@ -39,15 +39,10 @@ jobs:
           name: zeronsd-deb-ubuntu-24.04
           path: ./target/debian/*.deb
 
-      - name: Upload .deb to GitHub Release (tag push)
-        if: startsWith(github.ref, 'refs/tags/')
-        uses: softprops/action-gh-release@v2
-        with:
-          files: ./target/debian/*.deb
-
-      - name: Upload .deb to GitHub Release (release event)
+      - name: Upload .deb to GitHub Release (release event only)
         if: github.event_name == 'release'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.event.release.tag_name }}
           files: ./target/debian/*.deb
+          overwrite_files: true

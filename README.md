@@ -29,6 +29,8 @@ Use `just --list` to see all of the development tasks currently available.
 
 Setting `ZEROTIER_CENTRAL_TOKEN` in the environment (or providing the `-t` flag, which points at a file containing this value) is required. You must be able to administer the ZeroTier network to use `zeronsd` with it. Also, running as `root` is required as _many client resolvers do not work over anything but port 53_. Your `zeronsd` instance will listen on both `udp` and `tcp`, port `53`.
 
+If you are using a self-hosted controller (for example ZTNET), set `ZEROTIER_CENTRAL_INSTANCE` to that controller API base URL (for example `http://127.0.0.1:3000/api/v1`). When this variable is unset, `zeronsd` defaults to `https://my.zerotier.com/api/v1`.
+
 ### Bare commandline
 
 **Tip**: running `sudo`? Pass the `-E` flag to import your current shell's environment, making it easier to add the `ZEROTIER_CENTRAL_TOKEN`, or use the `-t` flag to avoid the environment entirely.

@@ -1,0 +1,49 @@
+name: build deb (ubuntu-24.04)
+
+on:
+  push:
+    tags:
+      - 'v*'
+  release:
+    types: [published]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-deb:
+    name: Build zeronsd .deb on Ubuntu 24.04
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install cargo-deb
+        run: cargo install cargo-deb --locked
+
+      - name: Build Debian package
+        run: cargo deb -p zeronsd --features vendored-openssl --output ./target/debian/zeronsd_${{ github.ref_name || 'dev' }}_amd64.deb
+
+      - name: Upload workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: zeronsd-deb-ubuntu-24.04
+          path: ./target/debian/*.deb
+
+      - name: Upload .deb to GitHub Release (tag push)
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ./target/debian/*.deb
+
+      - name: Upload .deb to GitHub Release (release event)
+        if: github.event_name == 'release'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.event.release.tag_name }}
+          files: ./target/debian/*.deb

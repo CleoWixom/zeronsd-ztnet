@@ -52,6 +52,11 @@ features = [ "vendored-openssl" ]
 
 [package.metadata.deb]
 copyright = "ZeroTier, Inc"
+assets = [
+  ["target/release/zeronsd", "usr/bin/zeronsd", "755"],
+  ["config.yaml.example", "etc/zeronsd/config.yaml", "644"],
+]
+conf-files = ["/etc/zeronsd/config.yaml"]
 
 extended-description = """
 ZeroNS provides names that are a part of ZeroTier Central's

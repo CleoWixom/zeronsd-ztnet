@@ -95,6 +95,52 @@ impl Into<Launcher> for StartArgs {
                     std::process::exit(1);
                 }
             }
+        } else if std::path::Path::new("/etc/zeronsd/config.yaml").exists() {
+            let res = Launcher::new_from_config("/etc/zeronsd/config.yaml", ConfigFormat::YAML);
+            match res {
+                Ok(mut res) => {
+                    // command-line network id is always authoritative
+                    res.network_id = Some(self.network_id.clone());
+
+                    // command-line arguments override default config values when supplied
+                    if self.domain.is_some() {
+                        res.domain = self.domain;
+                    }
+                    if self.hosts.is_some() {
+                        res.hosts = self.hosts;
+                    }
+                    if self.secret.is_some() {
+                        res.secret = self.secret;
+                    }
+                    if self.token.is_some() {
+                        res.token = self.token;
+                    }
+                    if self.chain_cert.is_some() {
+                        res.chain_cert = self.chain_cert;
+                    }
+                    if self.tls_cert.is_some() {
+                        res.tls_cert = self.tls_cert;
+                    }
+                    if self.tls_key.is_some() {
+                        res.tls_key = self.tls_key;
+                    }
+                    if self.log_level.is_some() {
+                        res.log_level = self.log_level;
+                    }
+                    if self.wildcard {
+                        res.wildcard = true;
+                    }
+                    if self.local_url != ZEROTIER_LOCAL_URL {
+                        res.local_url = Some(self.local_url);
+                    }
+
+                    res
+                }
+                Err(e) => {
+                    eprintln!("{}", e);
+                    std::process::exit(1);
+                }
+            }
         } else {
             Launcher {
                 domain: self.domain,
@@ -108,6 +154,7 @@ impl Into<Launcher> for StartArgs {
                 log_level: self.log_level,
                 network_id: Some(self.network_id),
                 local_url: Some(self.local_url),
+                central_instance: None,
             }
         }
     }

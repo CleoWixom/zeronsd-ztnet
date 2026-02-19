@@ -38,6 +38,8 @@ jobs:
         with:
           name: zeronsd-deb-ubuntu-24.04
           path: ./target/debian/*.deb
+          overwrite: true 
+          
 
       - name: Upload .deb to GitHub Release (release event only)
         if: github.event_name == 'release'

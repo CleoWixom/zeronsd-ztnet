@@ -21,6 +21,7 @@ use crate::{
 };
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(default)]
 pub struct Launcher {
     pub domain: Option<String>,
     pub hosts: Option<PathBuf>,

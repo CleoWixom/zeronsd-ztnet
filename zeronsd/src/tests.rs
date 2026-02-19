@@ -148,6 +148,21 @@ fn test_yaml_config_allows_indented_root_keys() {
 }
 
 #[test]
+fn test_yaml_config_uses_defaults_for_missing_fields() {
+    use crate::init::{ConfigFormat, Launcher};
+
+    let cfg = r#"token: ".central.token"
+"#;
+    let launcher = Launcher::parse_format(cfg, ConfigFormat::YAML).unwrap();
+
+    assert!(!launcher.wildcard);
+    assert_eq!(
+        launcher.local_url.as_deref(),
+        Some(crate::utils::ZEROTIER_LOCAL_URL)
+    );
+}
+
+#[test]
 fn test_central_instance_normalizes_env() {
     use crate::utils::central_instance;
 

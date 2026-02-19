@@ -120,6 +120,17 @@ fn test_central_token_panic() {
 }
 
 #[test]
+fn test_central_instance() {
+    use crate::utils::{central_instance, CENTRAL_BASEURL};
+
+    std::env::remove_var("ZEROTIER_CENTRAL_INSTANCE");
+    assert_eq!(central_instance(), CENTRAL_BASEURL);
+
+    std::env::set_var("ZEROTIER_CENTRAL_INSTANCE", "http://127.0.0.1:3000/api/v1");
+    assert_eq!(central_instance(), "http://127.0.0.1:3000/api/v1");
+}
+
+#[test]
 #[cfg(target_os = "linux")]
 fn test_supervise_systemd_green() {
     use std::path::PathBuf;

@@ -1,3 +1,4 @@
+[![build deb (ubuntu-24.04)](https://github.com/CleoWixom/zeronsd-ztnet/actions/workflows/build_deb_ubuntu24.04.yml/badge.svg)](https://github.com/CleoWixom/zeronsd-ztnet/actions/workflows/build_deb_ubuntu24.04.yml)
 # zeronsd: a name service centered around the ZeroTier Central API
 
 zeronsd provides names that are a part of [ZeroTier Central's](https://my.zerotier.com) configured _networks_; once provided an IPv4-capable network it:

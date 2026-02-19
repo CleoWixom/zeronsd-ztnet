@@ -1,0 +1,63 @@
+name: build deb (ubuntu-24.04)
+
+on:
+  push:
+    tags:
+      - 'v*'
+  release:
+    types: [published]
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  build-deb:
+    name: Build zeronsd .deb on Ubuntu 24.04
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install cargo-deb
+        run: cargo install cargo-deb --locked
+
+      - name: Build Debian package
+        shell: bash
+        run: |
+          REF_NAME="${GITHUB_REF_NAME:-dev}"
+          cargo deb -p zeronsd --features vendored-openssl \
+            --output "./target/debian/zeronsd_${REF_NAME}_amd64.deb"
+
+      - name: Collect Debian package artifact
+        shell: bash
+        run: |
+          mkdir -p dist
+          mapfile -t debs < <(find . -type f -path '*/target/debian/*.deb' | sort)
+          if [ "${#debs[@]}" -eq 0 ]; then
+            echo "No .deb files were produced under any target/debian directory" >&2
+            exit 1
+          fi
+          echo "Found packages:"
+          printf ' - %s\n' "${debs[@]}"
+          cp "${debs[@]}" dist/
+
+      - name: Upload workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: zeronsd-deb-ubuntu-24.04
+          path: ./dist/*.deb
+
+      - name: Upload .deb to GitHub Release (release event only)
+        if: github.event_name == 'release'
+        uses: ncipollo/release-action@v1
+        with:
+          tag: ${{ github.event.release.tag_name }}
+          artifacts: ./dist/*.deb
+          allowUpdates: true
+          replacesArtifacts: true
+          removeArtifacts: true

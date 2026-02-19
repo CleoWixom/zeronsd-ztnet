@@ -2,10 +2,13 @@ use std::{
     net::IpAddr,
     path::{Path, PathBuf},
     str::FromStr,
+    sync::Mutex,
 };
 
 use crate::traits::ToHostname;
 use crate::utils::domain_or_default;
+
+static ENV_VAR_LOCK: Mutex<()> = Mutex::new(());
 
 #[test]
 fn test_parse_member_name() {
@@ -117,6 +120,65 @@ fn test_central_token() {
 fn test_central_token_panic() {
     use crate::utils::central_token;
     central_token(Some(Path::new("/nonexistent"))).unwrap();
+}
+
+#[test]
+fn test_central_instance() {
+    use crate::utils::{central_instance, CENTRAL_BASEURL};
+
+    let _guard = ENV_VAR_LOCK.lock().unwrap();
+    std::env::remove_var("ZEROTIER_CENTRAL_INSTANCE");
+    assert_eq!(central_instance(), CENTRAL_BASEURL);
+
+    std::env::set_var("ZEROTIER_CENTRAL_INSTANCE", "http://127.0.0.1:3000/api/v1");
+    assert_eq!(central_instance(), "http://127.0.0.1:3000/api/v1");
+}
+
+#[test]
+fn test_yaml_config_allows_indented_root_keys() {
+    use crate::init::{ConfigFormat, Launcher};
+
+    let cfg = r#"token: ".central.token"
+ wildcard: false
+ central_instance: "http://127.0.0.1:3000/api/v1"
+"#;
+
+    let launcher = Launcher::parse_format(cfg, ConfigFormat::YAML).unwrap();
+    assert!(!launcher.wildcard);
+    assert_eq!(
+        launcher.central_instance.as_deref(),
+        Some("http://127.0.0.1:3000/api/v1")
+    );
+}
+
+#[test]
+fn test_yaml_config_uses_defaults_for_missing_fields() {
+    use crate::init::{ConfigFormat, Launcher};
+
+    let cfg = r#"token: ".central.token"
+"#;
+    let launcher = Launcher::parse_format(cfg, ConfigFormat::YAML).unwrap();
+
+    assert!(!launcher.wildcard);
+    assert_eq!(
+        launcher.local_url.as_deref(),
+        Some(crate::utils::ZEROTIER_LOCAL_URL)
+    );
+}
+
+#[test]
+fn test_central_instance_normalizes_env() {
+    use crate::utils::central_instance;
+
+    let _guard = ENV_VAR_LOCK.lock().unwrap();
+    std::env::set_var(
+        "ZEROTIER_CENTRAL_INSTANCE",
+        " http://127.0.0.1:3000/api/v1/ ",
+    );
+    assert_eq!(central_instance(), "http://127.0.0.1:3000/api/v1");
+
+    std::env::set_var("ZEROTIER_CENTRAL_INSTANCE", "   ");
+    assert_eq!(central_instance(), crate::utils::CENTRAL_BASEURL);
 }
 
 #[test]

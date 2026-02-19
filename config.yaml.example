@@ -7,6 +7,7 @@ token: ".central.token"
 # Useful for self-hosted controllers such as ZTNET.
 #
 central_instance: "http://127.0.0.1:3000/api/v1"
+# central_instance: "http://127.0.0.1:3000/api/v1"
 # The domain to use for all subdomains. Defaults to `home.arpa.`. Trailing
 # period is not required.
 #

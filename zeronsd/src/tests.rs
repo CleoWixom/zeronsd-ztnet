@@ -131,6 +131,37 @@ fn test_central_instance() {
 }
 
 #[test]
+fn test_yaml_config_allows_indented_root_keys() {
+    use crate::init::{ConfigFormat, Launcher};
+
+    let cfg = r#"token: ".central.token"
+ wildcard: false
+ central_instance: "http://127.0.0.1:3000/api/v1"
+"#;
+
+    let launcher = Launcher::parse_format(cfg, ConfigFormat::YAML).unwrap();
+    assert!(!launcher.wildcard);
+    assert_eq!(
+        launcher.central_instance.as_deref(),
+        Some("http://127.0.0.1:3000/api/v1")
+    );
+}
+
+#[test]
+fn test_central_instance_normalizes_env() {
+    use crate::utils::central_instance;
+
+    std::env::set_var(
+        "ZEROTIER_CENTRAL_INSTANCE",
+        " http://127.0.0.1:3000/api/v1/ ",
+    );
+    assert_eq!(central_instance(), "http://127.0.0.1:3000/api/v1");
+
+    std::env::set_var("ZEROTIER_CENTRAL_INSTANCE", "   ");
+    assert_eq!(central_instance(), crate::utils::CENTRAL_BASEURL);
+}
+
+#[test]
 #[cfg(target_os = "linux")]
 fn test_supervise_systemd_green() {
     use std::path::PathBuf;

@@ -17,7 +17,7 @@ pub const DEFAULT_DOMAIN_NAME: &str = "home.arpa.";
 // zeronsd version calculated from Cargo.toml
 pub const VERSION_STRING: &str = env!("CARGO_PKG_VERSION");
 // address of Central
-pub const CENTRAL_BASEURL: &str = "https://my.zerotier.com/api/v1";
+pub const CENTRAL_BASEURL: &str = "https://api.zerotier.com/api/v1";
 // address of local zerotier instance
 pub const ZEROTIER_LOCAL_URL: &str = "http://127.0.0.1:9993";
 
@@ -78,7 +78,13 @@ pub fn central_client(token: String) -> Result<central_api::Client, anyhow::Erro
 }
 
 pub fn central_instance() -> String {
-    std::env::var("ZEROTIER_CENTRAL_INSTANCE").unwrap_or(CENTRAL_BASEURL.to_string())
+    let configured = std::env::var("ZEROTIER_CENTRAL_INSTANCE")
+        .ok()
+        .map(|url| url.trim().trim_end_matches('/').to_string())
+        .filter(|url| !url.is_empty())
+        .unwrap_or(CENTRAL_BASEURL.to_string());
+
+    configured.trim_end_matches('/').to_string()
 }
 
 // extracts the ip from the CIDR. 10.0.0.1/32 becomes 10.0.0.1

@@ -6,7 +6,7 @@ on:
       - 'v*'
   release:
     types: [published]
-  workflow_dispatch:
+  workflow_dispatch: {}
 
 permissions:
   contents: write
@@ -27,7 +27,11 @@ jobs:
         run: cargo install cargo-deb --locked
 
       - name: Build Debian package
-        run: cargo deb -p zeronsd --features vendored-openssl --output ./target/debian/zeronsd_${{ github.ref_name || 'dev' }}_amd64.deb
+        shell: bash
+        run: |
+          REF_NAME="${GITHUB_REF_NAME:-dev}"
+          cargo deb -p zeronsd --features vendored-openssl \
+            --output "./target/debian/zeronsd_${REF_NAME}_amd64.deb"
 
       - name: Upload workflow artifact
         uses: actions/upload-artifact@v4

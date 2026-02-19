@@ -10,7 +10,7 @@ token: ".central.token"
 # The domain to use for all subdomains. Defaults to `home.arpa.`. Trailing
 # period is not required.
 #
-# domain: "foo"
+domain: "pzz"
 
 # The log level to display. Values are: [off, trace, debug, error, warn, info].
 #
@@ -28,7 +28,7 @@ token: ".central.token"
 # zerotier-one instance. Only needs to be set if it is not the default, which
 # is the path below (for linux).
 #
-# secret: "/var/lib/zerotier-one/authtoken.secret"
+secret: "/var/lib/zerotier-one/authtoken.secret"
 
 # Wildcard domains? This feature will add wildcard records for all domains
 # registered in zeronsd, so that subdomains of them can be used to point at the

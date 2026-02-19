@@ -32,7 +32,7 @@ jobs:
           REF_NAME="${GITHUB_REF_NAME:-dev}"
           cargo deb -p zeronsd --features vendored-openssl \
             --output "./target/debian/zeronsd_${REF_NAME}_amd64.deb"
-
+      
       - name: Collect Debian package artifact
         shell: bash
         run: |
